@@ -12,10 +12,13 @@
 import SimpleOpenNI.*;
 
 float x, y, angle, c;
+float x_sub, y_sub, angle_sub, c_sub;
 variateur v1,v2;
 PVector lastRH;
+float lastDistLE;
 PVector velRH = new PVector(0,0,0);
 boolean flag = false;
+boolean flip = false;
 int step = 0;
 
 
@@ -51,9 +54,12 @@ void setup()
   }
   
   x = width/2;y = height/2;
-  angle = random(TWO_PI); smooth(); 
+  angle = random(TWO_PI);
+  x_sub = width/2;y_sub = height/2;
+  angle_sub = -angle; smooth(); 
   noFill();stroke(0,51);
   colorMode(HSB);c=random(255);
+  c_sub=random(255);
   background(0);  v1=new variateur(1,6, 79); v2=new variateur(1,6, 79);
 
   // disable mirror
@@ -91,20 +97,27 @@ void draw()
       //print("tracking");
       PVector posRH = new PVector();
       PVector posLH = new PVector();
+      PVector posLE = new PVector();
       //PVector velRH = new PVector();
       context.getJointPositionSkeleton(userList[i], SimpleOpenNI.SKEL_RIGHT_HAND, posRH);
       context.getJointPositionSkeleton(userList[i], SimpleOpenNI.SKEL_LEFT_HAND, posLH);
+      context.getJointPositionSkeleton(userList[i], SimpleOpenNI.SKEL_LEFT_ELBOW, posLE);
       
       if(posRH.dist(posLH) < 80){
         background(0,0,0);
       }
-        
+      
+      if( lastDistLE >= 150 && posLE.dist(posRH) < 150){
+        flip = true;
+        print("touched!!");
+      }
+      lastDistLE = posLE.dist(posRH);
       //println("x = " + hoge.x);
       //println("y = " + hoge.y);
       //println("z = " + hoge.z);
       //println(posRH);
       
-      if(step == 1200){
+      if(step == 2000){
         step = 0;
       } else {
         step += 1;
@@ -128,10 +141,11 @@ void draw()
       
     }
   }
-  int fuga = 610;
-  drawLine(velRH.mag(), step);
-  //drawLine(velRH.mag());
-  
+  drawLine(velRH.mag(), step, flip);
+  if(flip){
+    flip = false;
+  }
+    
   // set the scene pos
   translate(width/2, height/2, 0);
   rotateX(rotX);
@@ -193,34 +207,53 @@ void onVisibleUser(SimpleOpenNI curContext,int userId)
 
 
 
-void drawLine(float velocity, int step){ 
-  c+=random(0.1,0.5);
-  if(c>255){c-=255;}
+void drawLine(float velocity, int step, boolean flip){ 
+  c+=random(0.1,0.5) * 0.5;
+  c_sub+=random(0.1,0.5) * 0.5;
   
-  if(step <= 800){
+  if(c>255){c-=255;}
+  if(c_sub>255){c_sub-=255;}
+  
+  if(flip){
+    c = 255 - c;
+    c_sub = 255 - c_sub;
+  }
+  
+  if(step <= 1600){
     stroke(c,200,255, 51);
   } else {
     stroke(c,200,50, 51);
   }
   strokeWeight(3);
   angle+=random(-0.1,0.1) * 2;
+  angle_sub+=random(-0.1,0.1) * 2;  
+  
   x=constrain(x+cos(angle) * 0.8 + cos(angle)*0.02*(velocity), 0, width);
   y=constrain(y+sin(angle) * 0.8 + sin(angle)*0.02*(velocity), 0, height);
+  x_sub=constrain(x_sub+cos(angle_sub) * 0.8 + cos(angle_sub)*0.02*(velocity), 0, width);
+  y_sub=constrain(y_sub+sin(angle_sub) * 0.8 + sin(angle_sub)*0.02*(velocity), 0, height);
   if((random(100)<2)||x==0||y==0||x==width||y==height){
     angle+=random(-1,1);
   }
+  if((random(100)<2)||x_sub==0||y_sub==0||x_sub==width||y_sub==height){
+    angle_sub+=random(-1,1);
+  }
   
   
-  if(step == 0 || step == 800){
+  if(step == 0 || step == 1600){
     x = width/2;y = height/2;
+    x_sub = width/2;y_sub = height/2;
     angle = random(TWO_PI);
+    angle_sub = -angle;
   }
   
   
   float t1 = v1.avance();
   float t2 = v2.avance();
   float an = atan2(y-height/2, x-width/2);
+  float an_sub = atan2(y_sub-height/2, x_sub-width/2);
   float p1x=width/2+(x-width/2)*0.3, p1y=height/2+(y-height/2)*0.3,p2x=width/2+(x-width/2)*0.6 , p2y=height/2+(y-height/2)*0.6;
+  float p1x_sub=width/2+(x_sub-width/2)*0.3, p1y_sub=height/2+(y_sub-height/2)*0.3,p2x_sub=width/2+(x_sub-width/2)*0.6 , p2y_sub=height/2+(y_sub-height/2)*0.6;
   beginShape();
   curveVertex(width/2, height/2);
   curveVertex(width/2, height/2);
@@ -228,6 +261,21 @@ void drawLine(float velocity, int step){
   curveVertex(p2x+cos(an-PI/2)*t2,p2y+sin(an-PI/2)*t2);
   curveVertex(x, y);
   curveVertex(x, y);
+  endShape();
+  
+  if(step <= 1600){
+    stroke(c_sub,200,255, 51);
+  } else {
+    stroke(c_sub,200,50, 51);
+  }
+  
+  beginShape();
+  curveVertex(width/2, height/2);
+  curveVertex(width/2, height/2);
+  curveVertex(p1x_sub+cos(an_sub+PI/2)*t1,p1y_sub+sin(an_sub+PI/2)*t1);
+  curveVertex(p2x_sub+cos(an_sub-PI/2)*t2,p2y_sub+sin(an_sub-PI/2)*t2);
+  curveVertex(x_sub, y_sub);
+  curveVertex(x_sub, y_sub);
   endShape();
 }
 
