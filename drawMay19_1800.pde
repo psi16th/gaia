@@ -10,6 +10,7 @@
  */
  
 import SimpleOpenNI.*;
+import java.awt.*;
 
 float x, y, angle, c;
 float x_sub, y_sub, angle_sub, c_sub;
@@ -27,24 +28,21 @@ float        zoomF =0.5f;
 float        rotX = radians(180);  // by default rotate the hole scene 180deg around the x-axis, 
                                    // the data from openni comes upside down
 float        rotY = radians(0);
-boolean      autoCalib=true;
 
-PVector      bodyCenter = new PVector();
-PVector      bodyDir = new PVector();
-PVector      com = new PVector();                                   
-PVector      com2d = new PVector();                                   
-color[]       userClr = new color[]{ color(255,0,0),
-                                     color(0,255,0),
-                                     color(0,0,255),
-                                     color(255,255,0),
-                                     color(255,0,255),
-                                     color(0,255,255)
-                                   };
+                                   
+                                   
+void init() {
+  frame.removeNotify();
+  frame.setUndecorated(true);
+  frame.addNotify();
+  super.init();  
+}
 
 void setup()
 {
-  background(0,0,0);
-  size(1024,768,P3D);  // strange, get drawing error in the cameraFrustum if i use P3D, in opengl there is no problem
+  //size(displayWidth, displayHeight, P3D);
+  size(1020, 720, P3D);
+  frame.setLocation(0,0);   // strange, get drawing error in the cameraFrustum if i use P3D, in opengl there is no problem
   context = new SimpleOpenNI(this);
   if(context.isInit() == false)
   {
@@ -80,18 +78,11 @@ void setup()
 
 void draw()
 {
-  // update the cam
   context.update();
-  
-  
-  
-  
-  // draw the skeleton if it's available
   int[] userList = context.getUsers();
   
   for(int i=0;i<userList.length;i++)
   {
-    //println(userList.length);
     if(context.isTrackingSkeleton(userList[i])){
       
       //print("tracking");
@@ -117,12 +108,13 @@ void draw()
       //println("z = " + hoge.z);
       //println(posRH);
       
+      /*
       if(step == 2000){
         step = 0;
       } else {
         step += 1;
       }
-      
+      */
       
       if(!flag){
         velRH.x = 0;
@@ -145,9 +137,17 @@ void draw()
   if(flip){
     flip = false;
   }
+  
+  if(step == 2000){
+    step = 0;
+  } else {
+    step += 1;
+  }
     
+  
   // set the scene pos
-  translate(width/2, height/2, 0);
+  translate(width
+  /2, height/2, 0);
   rotateX(rotX);
   rotateY(rotY);
   scale(zoomF);
@@ -160,25 +160,7 @@ void draw()
  
   translate(0,0,-1000);  // set the rotation center of the scene 1000 infront of the camera
 
-//SimpleOpenNI.SKEL_HEAD
-//SimpleOpenNI.SKEL_NECK
-//SimpleOpenNI.SKEL_LEFT_SHOULDER
-//SimpleOpenNI.SKEL_LEFT_ELBOW
-//SimpleOpenNI.SKEL_LEFT_HAND
-//SimpleOpenNI.SKEL_RIGHT_SHOULDER
-//SimpleOpenNI.SKEL_RIGHT_ELBOW
-//SimpleOpenNI.SKEL_RIGHT_HAND
-//SimpleOpenNI.SKEL_TORSO
-//SimpleOpenNI.SKEL_LEFT_HIP
-//SimpleOpenNI.SKEL_LEFT_KNEE
-//SimpleOpenNI.SKEL_LEFT_FOOT
-//SimpleOpenNI.SKEL_RIGHT_HIP
-//SimpleOpenNI.SKEL_RIGHT_KNEE
-//SimpleOpenNI.SKEL_RIGHT_FOOT  
-
 }
-
-
 
 
 // -----------------------------------------------------------------
@@ -219,11 +201,15 @@ void drawLine(float velocity, int step, boolean flip){
     c_sub = 255 - c_sub;
   }
   
+  /*
   if(step <= 1600){
     stroke(c,200,255, 51);
   } else {
     stroke(c,200,50, 51);
   }
+  */
+  
+  
   strokeWeight(3);
   angle+=random(-0.1,0.1) * 2;
   angle_sub+=random(-0.1,0.1) * 2;  
@@ -247,13 +233,30 @@ void drawLine(float velocity, int step, boolean flip){
     angle_sub = -angle;
   }
   
-  
+  if(step <= 1600){
+    drawXY(x, y, c, false);
+    drawXY(x_sub, y_sub, c_sub, false);
+  } else {
+    drawXY(x, y, c, true);
+    drawXY(x_sub, y_sub, c_sub, true);
+  }
+
+}
+
+void drawXY(float x, float y, float c, boolean dark){
+  strokeWeight(3);
+  if(dark){
+    stroke(c, 200, 50, 51);
+  } else {
+    stroke(c, 200, 255, 51);
+  }
   float t1 = v1.avance();
   float t2 = v2.avance();
   float an = atan2(y-height/2, x-width/2);
-  float an_sub = atan2(y_sub-height/2, x_sub-width/2);
-  float p1x=width/2+(x-width/2)*0.3, p1y=height/2+(y-height/2)*0.3,p2x=width/2+(x-width/2)*0.6 , p2y=height/2+(y-height/2)*0.6;
-  float p1x_sub=width/2+(x_sub-width/2)*0.3, p1y_sub=height/2+(y_sub-height/2)*0.3,p2x_sub=width/2+(x_sub-width/2)*0.6 , p2y_sub=height/2+(y_sub-height/2)*0.6;
+  float p1x=width/2+(x-width/2)*0.3;
+  float p1y=height/2+(y-height/2)*0.3;
+  float p2x=width/2+(x-width/2)*0.6;
+  float p2y=height/2+(y-height/2)*0.6;
   beginShape();
   curveVertex(width/2, height/2);
   curveVertex(width/2, height/2);
@@ -262,22 +265,8 @@ void drawLine(float velocity, int step, boolean flip){
   curveVertex(x, y);
   curveVertex(x, y);
   endShape();
-  
-  if(step <= 1600){
-    stroke(c_sub,200,255, 51);
-  } else {
-    stroke(c_sub,200,50, 51);
-  }
-  
-  beginShape();
-  curveVertex(width/2, height/2);
-  curveVertex(width/2, height/2);
-  curveVertex(p1x_sub+cos(an_sub+PI/2)*t1,p1y_sub+sin(an_sub+PI/2)*t1);
-  curveVertex(p2x_sub+cos(an_sub-PI/2)*t2,p2y_sub+sin(an_sub-PI/2)*t2);
-  curveVertex(x_sub, y_sub);
-  curveVertex(x_sub, y_sub);
-  endShape();
 }
+
 
 class variateur{
   float etat, mini, maxi, pas, ecart,v;
