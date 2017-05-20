@@ -27,12 +27,6 @@ int counter=0;
 SimpleOpenNI context;
 
 
-/*
-float        zoomF =0.5f;
-float        rotX = radians(180);  // by default rotate the hole scene 180deg around the x-axis, 
-                                   // the data from openni comes upside down
-float        rotY = radians(0);
-*/
                                    
                                    
 void init() {
@@ -88,7 +82,7 @@ void draw()
   
   if(userList.length == 0){
     //text("nobody tracked", width/4, height/4);
-    drawRect(0, 400, height - 300);
+    //drawRect(0, 400, height - 300);
   }
   
   boolean from_center = false;
@@ -98,7 +92,7 @@ void draw()
   {
     if(context.isTrackingSkeleton(userList[i])){
       //text("Skeleton tracking -completed-", width/4, height/4);
-      drawRect(100, 400, height - 300);
+      //drawRect(100, 400, height - 300);
       //print("tracking");
       PVector posRH = new PVector();
       PVector posLH = new PVector();
@@ -125,11 +119,11 @@ void draw()
       if( lastDistRE >= 150 && posRE.dist(posLH) < 150){
         from_center = true;
         counter = 10;
-        drawRect(200, width - 450, height - 300);
+        //drawRect(200, width - 450, height - 300);
       }
       lastDistRE = posRE.dist(posLH);
       
-      
+      /*
       if(counter > 0){
         counter--;
         if(counter == 0){
@@ -137,7 +131,7 @@ void draw()
           rect(width - 450,height - 300, 60, 60);
         }
       }
-
+      */
       
       if(!flag){
         velRH.x = 0;
@@ -154,7 +148,7 @@ void draw()
       
     } else {
       //text("Skeleton tracking -incompleted-", width/4, height/4);
-      drawRect(50, 400, height - 300);
+      //drawRect(50, 400, height - 300);
       velRH.x = 0;
       velRH.y = 0;
       velRH.z = 0;
